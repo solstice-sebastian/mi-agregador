@@ -13,8 +13,11 @@
     "test": "test"
   },
   "dependencies": {
+    "@solstice.sebastian/helpers": "^1.1.1",
+    "@solstice.sebastian/ticker": "^1.2.21",
     "dotenv": "^5.0.1",
     "forever": "^0.15.3",
+    "lodash": "^4.17.10",
     "moment": "^2.20.1",
     "node-fetch": "^1.7.3",
     "shelljs": "^0.8.1",

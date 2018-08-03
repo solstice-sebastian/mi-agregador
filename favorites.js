@@ -1,9 +1,11 @@
-const moment = require('moment');
-const fs = require('fs');
 require('dotenv').config();
+const fs = require('fs');
+const { pick } = require('lodash');
+const { msToDatetime } = require('@solstice.sebastian/helpers')();
+const Ticker = require('@solstice.sebastian/ticker');
+
 // const shell = require('shelljs');
 const Poller = require('./modules/poller.js');
-const Ticker = require('./models/ticker.js');
 
 const apiKey = process.env.API_KEY;
 const apiSecret = process.env.API_SECRET;
@@ -33,14 +35,16 @@ const logScriptStart = () => {
   if (fs.existsSync(path) === false) {
     fs.writeFileSync(path, '');
   }
-  const timestamp = moment(Date.now()).format('YYYY-MM-DD HH:mm:ss');
+  const timestamp = msToDatetime(Date.now());
   fs.appendFileSync(path, `starting script @ ${timestamp}\n`);
 };
 logScriptStart();
 
+const toRow = (vals) => `${vals.join(',')}\n`;
+
 const onUpdate = (favorites) => {
   requestsCompleted += 1;
-  const timestamp = moment(Date.now()).format('YYYY-MM-DD HH:mm:ss');
+  const timestamp = msToDatetime(Date.now());
   // only log new data
   if (favorites[0].server_time === prevServerTime) {
     conflictsCount += 1;
@@ -50,8 +54,9 @@ const onUpdate = (favorites) => {
     const tickers = favorites.map((datum) => new Ticker(datum));
     // log to each file
     tickers.forEach((ticker) => {
-      const filename = ticker.symbol.replace(/\//g, '_');
+      const filename = ticker.mktName.replace(/\//g, '_');
       const path = `${dataDir}/${filename}.csv`;
+      const record = ticker.toRecord();
 
       if (isInitialRun) {
         // make dataDir if it doesnt exists
@@ -61,12 +66,12 @@ const onUpdate = (favorites) => {
 
         // create file + headerRow if it doesnt exist
         if (fs.existsSync(path) === false) {
-          fs.writeFileSync(path, ticker.toHeaderRow());
+          fs.writeFileSync(path, toRow(Object.keys(record)));
         }
       }
 
       // file already exists - append
-      fs.appendFileSync(path, ticker.toRow());
+      fs.appendFileSync(path, toRow(Object.values(record)));
     });
   }
 
