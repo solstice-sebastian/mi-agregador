@@ -7,6 +7,7 @@ const Ticker = require('./models/ticker.js');
 
 const apiKey = process.env.API_KEY;
 const apiSecret = process.env.API_SECRET;
+const { STORAGE_PATH } = process.env;
 
 const headers = {
   'Content-Type': 'application/json',
@@ -16,9 +17,9 @@ const headers = {
 
 const method = 'POST';
 const endpoint = 'https://api.coinigy.com/api/v1/userWatchList';
-const TIME_BETWEEN_REQUESTS = 1000 * 15;
+const TIME_BETWEEN_REQUESTS = 1000 * 10;
 
-const dataDir = 'data';
+const dataDir = STORAGE_PATH;
 let conflictsCount = 0;
 let prevServerTime;
 
