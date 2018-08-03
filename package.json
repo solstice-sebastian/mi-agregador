@@ -1,0 +1,37 @@
+{
+  "name": "crypto-data",
+  "version": "0.0.1",
+  "description": "collects data from crypto exchanges",
+  "main": "index.js",
+  "scripts": {
+    "favorites": "node favorites.js",
+    "caffeinate": "caffeinate",
+    "forever:favorites": "forever --minUptime 10000 --spinSleepTime 10000 -a -o favorites.log favorites.js",
+    "market-trades": "node market-trades.js",
+    "clean": "rm -rf data/tickers favorites.log",
+    "start": "node index.js",
+    "test": "test"
+  },
+  "dependencies": {
+    "dotenv": "^5.0.1",
+    "forever": "^0.15.3",
+    "moment": "^2.20.1",
+    "node-fetch": "^1.7.3",
+    "shelljs": "^0.8.1",
+    "socketcluster-client": "^10.1.1"
+  },
+  "devDependencies": {
+    "eslint": "^4.16.0",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-config-standard": "^11.0.0-beta.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-prettier": "^2.5.0",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "prettier": "^1.10.2"
+  },
+  "author": "Aric Allen",
+  "license": "MIT"
+}

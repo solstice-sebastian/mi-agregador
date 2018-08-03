@@ -1,0 +1,10 @@
+*.log
+node_modules/
+private/
+public/vendor/
+public/playground/
+.vscode/
+yarn.lock
+data/
+*data*
+.env
