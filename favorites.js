@@ -1,5 +1,6 @@
 require('dotenv').config();
 const fs = require('fs');
+const { omit } = require('lodash');
 const { msToDatetime } = require('@solstice.sebastian/helpers')();
 const Ticker = require('@solstice.sebastian/ticker');
 const Poller = require('./modules/poller.js');
@@ -43,7 +44,7 @@ const onUpdate = (favorites) => {
   tickers.forEach((ticker) => {
     const filename = ticker.mktName.replace(/\//g, '_');
     const path = `${dataDir}/${filename}.csv`;
-    const record = ticker.toRecord();
+    const record = omit(ticker.toRecord(), ['symbol', 'exchangeCode']);
 
     if (isInitialRun) {
       // make dataDir if it doesnt exists
