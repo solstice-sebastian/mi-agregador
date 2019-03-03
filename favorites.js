@@ -1,13 +1,18 @@
 require('dotenv').config();
 const fs = require('fs');
 const { omit } = require('lodash');
+const Sentry = require('@sentry/node');
 const { msToDatetime } = require('@solstice.sebastian/helpers');
 const Ticker = require('@solstice.sebastian/ticker');
+const { MS_PER_HOUR } = require('@solstice.sebastian/constants');
 const Poller = require('./modules/poller.js');
 
 const apiKey = process.env.API_KEY;
 const apiSecret = process.env.API_SECRET;
-const { STORAGE_PATH } = process.env;
+const { STORAGE_PATH, SENTRY_PROJECT_ID, SENTRY_PUBLIC_KEY } = process.env;
+
+const dsn = `https://${SENTRY_PUBLIC_KEY}@sentry.io/${SENTRY_PROJECT_ID}`;
+Sentry.init({ dsn });
 
 const headers = {
   'Content-Type': 'application/json',
@@ -22,6 +27,7 @@ const TIME_BETWEEN_REQUESTS = 1000 * 10;
 const dataDir = STORAGE_PATH;
 
 let requestsCompleted = 0;
+let lastRequestTimestamp = Date.now();
 let isInitialRun = true;
 
 const logScriptStart = () => {
@@ -38,6 +44,7 @@ const toRow = (vals) => `${vals.join(',')}\n`;
 
 const onUpdate = (favorites) => {
   requestsCompleted += 1;
+  lastRequestTimestamp = Date.now();
   const timestamp = msToDatetime(Date.now());
   const tickers = favorites.map((datum) => new Ticker(datum));
   // log to each file
@@ -70,9 +77,14 @@ const onUpdate = (favorites) => {
   return Promise.resolve();
 };
 
-process.on('error', (error) => {
-  console.log('exiting with error:', error);
-});
-
 const poller = Poller({ onUpdate, method, endpoint, headers, timeout: TIME_BETWEEN_REQUESTS });
 poller.poll({});
+
+const checkLatest = () => {
+  if (Date.now() - lastRequestTimestamp > MS_PER_HOUR) {
+    throw new Error('no update for last 1 hour');
+  }
+};
+
+// check every 30 mins for last update call
+setInterval(checkLatest, MS_PER_HOUR / 2);

@@ -13,6 +13,8 @@
     "test": "test"
   },
   "dependencies": {
+    "@sentry/node": "^4.6.4",
+    "@solstice.sebastian/constants": "^3.3.5",
     "@solstice.sebastian/helpers": "^1.1.1",
     "@solstice.sebastian/ticker": "^1.2.21",
     "dotenv": "^5.0.1",
@@ -35,6 +37,6 @@
   "author": "solstice.sebastian",
   "license": "MIT",
   "engines": {
-    "node": "10.4.1"
+    "node": ">10.4.1"
   }
 }
