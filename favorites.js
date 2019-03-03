@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('fs');
 const { omit } = require('lodash');
-const { msToDatetime } = require('@solstice.sebastian/helpers')();
+const { msToDatetime } = require('@solstice.sebastian/helpers');
 const Ticker = require('@solstice.sebastian/ticker');
 const Poller = require('./modules/poller.js');
 
