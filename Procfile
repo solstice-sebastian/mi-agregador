@@ -1,1 +1,1 @@
-web: yarn forever:favorites
+web: npm run forever:favorites
