@@ -15,7 +15,7 @@
   "dependencies": {
     "@sentry/node": "^4.6.4",
     "@solstice.sebastian/constants": "^3.3.5",
-    "@solstice.sebastian/helpers": "^1.1.1",
+    "@solstice.sebastian/helpers": "^2.0.0",
     "@solstice.sebastian/ticker": "^1.2.21",
     "dotenv": "^5.0.1",
     "forever": "^0.15.3",
