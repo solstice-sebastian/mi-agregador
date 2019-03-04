@@ -17,6 +17,7 @@
     "@solstice.sebastian/constants": "^3.3.5",
     "@solstice.sebastian/helpers": "^2.0.0",
     "@solstice.sebastian/ticker": "^1.2.21",
+    "@solstice.sebastian/ticker-fetcher": "^1.1.4",
     "dotenv": "^5.0.1",
     "forever": "^0.15.3",
     "lodash": "^4.17.11",

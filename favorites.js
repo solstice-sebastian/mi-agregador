@@ -3,9 +3,8 @@ const fs = require('fs');
 const { omit } = require('lodash');
 const Sentry = require('@sentry/node');
 const { msToDatetime } = require('@solstice.sebastian/helpers');
-const Ticker = require('@solstice.sebastian/ticker');
+const { TickerFetcher } = require('@solstice.sebastian/ticker-fetcher');
 const { MS_PER_HOUR } = require('@solstice.sebastian/constants');
-const Poller = require('./modules/poller.js');
 
 const apiKey = process.env.API_KEY;
 const apiSecret = process.env.API_SECRET;
@@ -42,13 +41,12 @@ logScriptStart();
 
 const toRow = (vals) => `${vals.join(',')}\n`;
 
-const onUpdate = (favorites) => {
+const onUpdate = ({ tickerMap }) => {
   requestsCompleted += 1;
   lastRequestTimestamp = Date.now();
   const timestamp = msToDatetime(Date.now());
-  const tickers = favorites.map((datum) => new Ticker(datum));
   // log to each file
-  tickers.forEach((ticker) => {
+  tickerMap.forEach((ticker) => {
     const filename = ticker.mktName.replace(/\//g, '_');
     const path = `${dataDir}/${filename}.csv`;
     const record = omit(ticker.toRecord(), ['symbol', 'exchangeCode']);
@@ -77,8 +75,8 @@ const onUpdate = (favorites) => {
   return Promise.resolve();
 };
 
-const poller = Poller({ onUpdate, method, endpoint, headers, timeout: TIME_BETWEEN_REQUESTS });
-poller.poll({});
+const fetcher = new TickerFetcher({ apiKey, apiSecret });
+fetcher.start({ timeout: TIME_BETWEEN_REQUESTS, onUpdate });
 
 const checkLatest = () => {
   if (Date.now() - lastRequestTimestamp > MS_PER_HOUR) {
