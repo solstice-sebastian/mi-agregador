@@ -50,7 +50,8 @@ const run = async () => {
   };
   filenames.forEach((filename) => {
     const symbol = filename.replace('.csv', '').replace('_', '');
-    migrate(join(STORAGE_PATH, filename), symbol, db, success, errorCb);
+    const filePath = join(STORAGE_PATH, filename);
+    migrate(filePath, symbol, db, success, errorCb);
   });
 };
 

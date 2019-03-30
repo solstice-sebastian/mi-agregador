@@ -1,1 +1,1 @@
-web: npm run forever:favorites
+web: yarn migrate
