@@ -1,88 +1,66 @@
 require('dotenv').config();
-const fs = require('fs');
-const { omit } = require('lodash');
+const { pick } = require('lodash');
+const MongoClient = require('mongodb');
 const Sentry = require('@sentry/node');
 const { msToDatetime } = require('@solstice.sebastian/helpers');
 const { TickerFetcher } = require('@solstice.sebastian/ticker-fetcher');
-const { MS_PER_HOUR } = require('@solstice.sebastian/constants');
+const { MS_PER_HOUR, Environment } = require('@solstice.sebastian/constants');
 
 const apiKey = process.env.API_KEY;
 const apiSecret = process.env.API_SECRET;
-const { STORAGE_PATH, SENTRY_PROJECT_ID, SENTRY_PUBLIC_KEY } = process.env;
+const { ENVIRONMENT, MONGO_URL, DB_NAME, SENTRY_PROJECT_ID, SENTRY_PUBLIC_KEY } = process.env;
 
-const dsn = `https://${SENTRY_PUBLIC_KEY}@sentry.io/${SENTRY_PROJECT_ID}`;
-Sentry.init({ dsn });
+if (ENVIRONMENT === Environment.PRODUCTION) {
+  const dsn = `https://${SENTRY_PUBLIC_KEY}@sentry.io/${SENTRY_PROJECT_ID}`;
+  Sentry.init({ dsn });
+}
 
-const headers = {
-  'Content-Type': 'application/json',
-  'X-API-KEY': apiKey,
-  'X-API-SECRET': apiSecret,
-};
-
-const method = 'POST';
-const endpoint = 'https://api.coinigy.com/api/v1/userWatchList';
 const TIME_BETWEEN_REQUESTS = 1000 * 10;
 
-const dataDir = STORAGE_PATH;
-
-let requestsCompleted = 0;
-let lastRequestTimestamp = Date.now();
-let isInitialRun = true;
-
-const logScriptStart = () => {
-  const path = 'progress.log';
-  if (fs.existsSync(path) === false) {
-    fs.writeFileSync(path, '');
-  }
-  const timestamp = msToDatetime(Date.now());
-  fs.appendFileSync(path, `starting script @ ${timestamp}\n`);
+const getDb = async () => {
+  const client = await MongoClient.connect(
+    MONGO_URL,
+    { useNewUrlParser: true }
+  );
+  return client.db(DB_NAME);
 };
-logScriptStart();
 
-const toRow = (vals) => `${vals.join(',')}\n`;
+const run = async () => {
+  let requestsCompleted = 0;
+  let lastRequestTimestamp = Date.now();
 
-const onUpdate = ({ tickerMap }) => {
-  requestsCompleted += 1;
-  lastRequestTimestamp = Date.now();
-  const timestamp = msToDatetime(Date.now());
-  // log to each file
-  tickerMap.forEach((ticker) => {
-    const filename = ticker.mktName.replace(/\//g, '_');
-    const path = `${dataDir}/${filename}.csv`;
-    const record = omit(ticker.toRecord(), ['symbol', 'exchangeCode']);
+  const db = await getDb();
+  const onUpdate = ({ tickerMap }) => {
+    requestsCompleted += 1;
+    lastRequestTimestamp = Date.now();
+    const localDatetime = msToDatetime(Date.now());
+    // log to each file
+    tickerMap.forEach((ticker) => {
+      const record = pick(ticker, [
+        'price',
+        'volume',
+        'btcVolume',
+        'highTrade',
+        'lowTrade',
+        'localTimestamp',
+        'localDatetime',
+      ]);
+      db.collection(ticker.symbol).insertOne(record);
+    });
 
-    if (isInitialRun) {
-      // make dataDir if it doesnt exists
-      if (fs.existsSync(dataDir) === false) {
-        console.log(`creating ${dataDir}`);
-        fs.mkdirSync(dataDir);
-      } else {
-        console.log(`${dataDir} already exists`);
-      }
+    console.log(`requestsCompleted: ${requestsCompleted} @ ${localDatetime}`);
+  };
 
-      // create file + headerRow if it doesnt exist
-      if (fs.existsSync(path) === false) {
-        fs.writeFileSync(path, toRow(Object.keys(record)));
-      }
+  const fetcher = new TickerFetcher({ apiKey, apiSecret });
+  fetcher.start({ timeout: TIME_BETWEEN_REQUESTS, onUpdate });
+
+  const checkLatest = () => {
+    if (Date.now() - lastRequestTimestamp > MS_PER_HOUR) {
+      throw new Error('no update for last 1 hour');
     }
-
-    // file already exists - append
-    fs.appendFileSync(path, toRow(Object.values(record)));
-  });
-
-  console.log(`requestsCompleted: ${requestsCompleted} @ ${timestamp}`);
-  isInitialRun = false;
-  return Promise.resolve();
+  };
+  // check every 30 mins for last update call
+  setInterval(checkLatest, MS_PER_HOUR / 2);
 };
 
-const fetcher = new TickerFetcher({ apiKey, apiSecret });
-fetcher.start({ timeout: TIME_BETWEEN_REQUESTS, onUpdate });
-
-const checkLatest = () => {
-  if (Date.now() - lastRequestTimestamp > MS_PER_HOUR) {
-    throw new Error('no update for last 1 hour');
-  }
-};
-
-// check every 30 mins for last update call
-setInterval(checkLatest, MS_PER_HOUR / 2);
+run();
