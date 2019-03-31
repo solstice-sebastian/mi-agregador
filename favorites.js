@@ -5,6 +5,7 @@ const Sentry = require('@sentry/node');
 const { msToDatetime, roundTimestamp } = require('@solstice.sebastian/helpers');
 const { TickerFetcher } = require('@solstice.sebastian/ticker-fetcher');
 const { MS_PER_HOUR, Environment } = require('@solstice.sebastian/constants');
+const { runMigration } = require('./migrate');
 
 const apiKey = process.env.API_KEY;
 const apiSecret = process.env.API_SECRET;
@@ -73,4 +74,6 @@ const run = async () => {
   setInterval(checkLatest, MS_PER_HOUR / 2);
 };
 
-run();
+runMigration.then(() => {
+  run();
+});

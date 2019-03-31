@@ -87,11 +87,15 @@ const removeFile = (filePath) => {
   });
 };
 
-const run = async () => {
+const runMigration = async () => {
   const db = await getDb();
+  const promise = new Promise();
   const filenames = readdirSync(STORAGE_PATH);
-  let insertedCount = 0;
+  if (filenames.length === 0) {
+    return promise.resolve();
+  }
 
+  let insertedCount = 0;
   const onSuccess = (symbol, filePath) => {
     insertedCount += 1;
     log(`successfully migrated ${symbol}`);
@@ -99,7 +103,8 @@ const run = async () => {
     if (insertedCount === filenames.length) {
       log([``, ``, `====================================`, ``, ``].join('\n'));
       log(`successfully migrated ${insertedCount} symbols`);
-      process.exit(0);
+      promise.resolve();
+      // process.exit(0);
     }
   };
 
@@ -113,6 +118,8 @@ const run = async () => {
     const filePath = join(STORAGE_PATH, filename);
     migrate(filePath, symbol, db, onSuccess, onError);
   });
+
+  return promise;
 };
 
-run();
+module.exports = { runMigration };
