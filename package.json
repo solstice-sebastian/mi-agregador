@@ -18,6 +18,7 @@
     "@solstice.sebastian/helpers": "^2.4.0",
     "@solstice.sebastian/ticker": "^1.2.21",
     "@solstice.sebastian/ticker-fetcher": "^1.1.4",
+    "csv-parser": "^2.2.0",
     "csvjson": "^5.1.0",
     "dotenv": "^5.0.1",
     "forever": "^0.15.3",

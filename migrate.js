@@ -1,8 +1,16 @@
 /* eslint-disable consistent-return */
 require('dotenv').config();
 const MongoClient = require('mongodb');
-const { readFile, readdirSync, unlink, appendFile, writeFileSync, existsSync } = require('fs');
+const {
+  createReadStream,
+  readdirSync,
+  unlink,
+  appendFile,
+  writeFileSync,
+  existsSync,
+} = require('fs');
 const { join } = require('path');
+const csv = require('csv-parser');
 const { toObject } = require('csvjson');
 const { msToDatetime } = require('@solstice.sebastian/helpers');
 const { normalizeRecord } = require('./modules/normalize-record');
@@ -48,7 +56,10 @@ const updateCurrentDocs = async (symbol, db) => {
     .toArray();
   const normalized = currentDocs.map(normalizeRecord);
   await db.collection(symbol).drop();
-  db.collection(symbol).insertMany(normalized);
+  db.collection(symbol)
+    .insertMany(normalized)
+    .then(() => log(`successfully updated previous docs for ${symbol}`))
+    .catch(() => log(`error updating previous docs for ${symbol}`));
 };
 
 const migrate = async (filePath, symbol, db, onSuccess, onError) => {
@@ -56,26 +67,32 @@ const migrate = async (filePath, symbol, db, onSuccess, onError) => {
   if (currentDocs > 0) {
     await updateCurrentDocs(symbol, db);
   }
-  readFile(filePath, { encoding: 'utf8' }, (err, csvData) => {
-    const headers = 'price,volume,btcVolume,lowTrade,highTrade,localTimestamp,datetime';
-    const tickerRecords = toObject(csvData, { headers });
-    if (tickerRecords[0].price === 'price') {
-      tickerRecords.shift();
-    }
-    if (err) {
-      return onError(symbol, `readFile`, err);
-    }
+  const tickerRecords = [];
+  const headers = 'price,volume,btcVolume,lowTrade,highTrade,localTimestamp,datetime'.split(',');
+  createReadStream(filePath)
+    .pipe(csv({ headers }))
+    .on('data', (chunk) => tickerRecords.push(chunk))
+    .on('error', (err) => {
+      log(`error reading csv tickers for ${symbol}`);
+      log(err);
+    })
+    .on('end', () => {
+      console.log(`finished reading csv tickers for ${symbol}`);
+      // const tickerRecords = toObject(data, { headers });
+      if (tickerRecords[0].price === 'price') {
+        tickerRecords.shift();
+      }
 
-    const normalized = tickerRecords.map(normalizeRecord);
-    return db
-      .collection(symbol)
-      .insertMany(normalized)
-      .then(() => {
-        onSuccess(symbol, filePath);
-        indexCollection(symbol, db);
-      })
-      .catch(() => onError(symbol, 'insertMany'));
-  });
+      const normalized = tickerRecords.map(normalizeRecord);
+      return db
+        .collection(symbol)
+        .insertMany(normalized)
+        .then(() => {
+          onSuccess(symbol, filePath);
+          indexCollection(symbol, db);
+        })
+        .catch(() => onError(symbol, 'insertMany'));
+    });
 };
 
 const removeFile = (filePath) => {
@@ -90,8 +107,8 @@ const removeFile = (filePath) => {
 
 const runMigration = async () => {
   const db = await getDb();
+  const filenames = readdirSync(STORAGE_PATH);
   return new Promise((res) => {
-    const filenames = readdirSync(STORAGE_PATH);
     if (filenames.length === 0) {
       log(`no files to migrate`);
       return res();
@@ -114,11 +131,24 @@ const runMigration = async () => {
       log(err);
     };
 
-    filenames.forEach((filename) => {
-      const symbol = filename.replace('.csv', '').replace('_', '');
-      const filePath = join(STORAGE_PATH, filename);
-      migrate(filePath, symbol, db, onSuccess, onError);
-    });
+    const run = (index) => {
+      if (index < filenames.length) {
+        const filename = filenames[index];
+        const symbol = filename.replace('.csv', '').replace('_', '');
+        const filePath = join(STORAGE_PATH, filename);
+        migrate(
+          filePath,
+          symbol,
+          db,
+          () => {
+            onSuccess(symbol, filePath);
+            run(index + 1);
+          },
+          onError
+        );
+      }
+    };
+    run(0);
   });
 };
 
