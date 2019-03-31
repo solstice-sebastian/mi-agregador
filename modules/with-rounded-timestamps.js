@@ -1,10 +1,8 @@
-const { msToDatetime } = require('@solstice.sebastian/helpers');
+const { roundTimestamp, msToDatetime } = require('@solstice.sebastian/helpers');
 
-const withRoundedTimestamps = (tickers, seconds = 10) => {
+const withRoundedTimestamps = (tickers) => {
   return tickers.map((ticker) => {
-    const date = new Date(ticker.datetime);
-    date.setSeconds(Math.round(date.getSeconds() / seconds) * seconds);
-    const localTimestamp = date.getTime();
+    const localTimestamp = roundTimestamp(ticker.localTimestamp, 'seconds', 10);
     const datetime = msToDatetime(localTimestamp);
     return {
       ...ticker,

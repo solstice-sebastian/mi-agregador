@@ -2,7 +2,7 @@ require('dotenv').config();
 const { pick } = require('lodash');
 const MongoClient = require('mongodb');
 const Sentry = require('@sentry/node');
-const { msToDatetime } = require('@solstice.sebastian/helpers');
+const { msToDatetime, roundTimestamp } = require('@solstice.sebastian/helpers');
 const { TickerFetcher } = require('@solstice.sebastian/ticker-fetcher');
 const { MS_PER_HOUR, Environment } = require('@solstice.sebastian/constants');
 
@@ -25,6 +25,16 @@ const getDb = async () => {
   return client.db(DB_NAME);
 };
 
+const normalize = (record) => {
+  const localTimestamp = roundTimestamp(record.localTimestamp);
+  const localDatetime = msToDatetime(localTimestamp);
+  return {
+    ...record,
+    localTimestamp,
+    localDatetime,
+  };
+};
+
 const run = async () => {
   let requestsCompleted = 0;
   let lastRequestTimestamp = Date.now();
@@ -45,7 +55,7 @@ const run = async () => {
         'localTimestamp',
         'localDatetime',
       ]);
-      db.collection(ticker.symbol).insertOne(record);
+      db.collection(ticker.symbol).insertOne(normalize(record));
     });
 
     console.log(`requestsCompleted: ${requestsCompleted} @ ${localDatetime}`);

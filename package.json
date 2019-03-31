@@ -13,13 +13,11 @@
     "test": "test"
   },
   "dependencies": {
-    "@material-ui/styles": "^3.0.0-alpha.10",
     "@sentry/node": "^4.6.4",
     "@solstice.sebastian/constants": "^3.3.5",
-    "@solstice.sebastian/helpers": "^2.0.0",
+    "@solstice.sebastian/helpers": "^2.4.0",
     "@solstice.sebastian/ticker": "^1.2.21",
     "@solstice.sebastian/ticker-fetcher": "^1.1.4",
-    "classnames": "^2.2.6",
     "csvjson": "^5.1.0",
     "dotenv": "^5.0.1",
     "forever": "^0.15.3",
