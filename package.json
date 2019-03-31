@@ -24,7 +24,8 @@
     "forever": "^0.15.3",
     "lodash": "^4.17.11",
     "mongodb": "^3.2.2",
-    "node-fetch": "^1.7.3"
+    "node-fetch": "^1.7.3",
+    "tunnel-ssh": "^4.1.4"
   },
   "devDependencies": {
     "eslint": "^4.16.0",

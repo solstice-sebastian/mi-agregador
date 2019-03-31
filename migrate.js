@@ -11,7 +11,6 @@ const {
 } = require('fs');
 const { join } = require('path');
 const csv = require('csv-parser');
-const { toObject } = require('csvjson');
 const { msToDatetime } = require('@solstice.sebastian/helpers');
 const { normalizeRecord } = require('./modules/normalize-record');
 
