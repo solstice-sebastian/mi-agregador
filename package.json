@@ -8,7 +8,7 @@
     "caffeinate": "caffeinate",
     "forever:favorites": "forever --minUptime 10000 --spinSleepTime 10000 -a -o favorites.log favorites.js",
     "clean": "rm -rf data/* favorites.log",
-    "start": "yarn forever:favorites",
+    "start": "npm run forever:favorites",
     "migrate": "node migrate.js",
     "test": "test"
   },
