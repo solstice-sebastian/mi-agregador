@@ -1,3 +1,4 @@
+/* eslint-disable consistent-return */
 require('dotenv').config();
 const MongoClient = require('mongodb');
 const { readFile, readdirSync, unlink, appendFile, writeFileSync, existsSync } = require('fs');
@@ -15,7 +16,7 @@ if (existsSync(logFilePath) === false) {
 
 const log = (message) => {
   console.log(message);
-  appendFile(logFilePath, message, (err) => {
+  appendFile(logFilePath, `${message}\n`, (err) => {
     if (err) {
       console.log(`error appending to logfile`, err);
     }
@@ -89,37 +90,36 @@ const removeFile = (filePath) => {
 
 const runMigration = async () => {
   const db = await getDb();
-  const promise = new Promise();
-  const filenames = readdirSync(STORAGE_PATH);
-  if (filenames.length === 0) {
-    return promise.resolve();
-  }
-
-  let insertedCount = 0;
-  const onSuccess = (symbol, filePath) => {
-    insertedCount += 1;
-    log(`successfully migrated ${symbol}`);
-    removeFile(filePath);
-    if (insertedCount === filenames.length) {
-      log([``, ``, `====================================`, ``, ``].join('\n'));
-      log(`successfully migrated ${insertedCount} symbols`);
-      promise.resolve();
-      // process.exit(0);
+  return new Promise((res) => {
+    const filenames = readdirSync(STORAGE_PATH);
+    if (filenames.length === 0) {
+      log(`no files to migrate`);
+      return res();
     }
-  };
 
-  const onError = (symbol, location, err) => {
-    log(`error migrating ${symbol} @ ${location}: `);
-    log(err);
-  };
+    let insertedCount = 0;
+    const onSuccess = (symbol, filePath) => {
+      insertedCount += 1;
+      log(`successfully migrated ${symbol}`);
+      removeFile(filePath);
+      if (insertedCount === filenames.length) {
+        log([``, ``, `====================================`, ``, ``].join('\n'));
+        log(`successfully migrated ${insertedCount} symbols`);
+        res();
+      }
+    };
 
-  filenames.forEach((filename) => {
-    const symbol = filename.replace('.csv', '').replace('_', '');
-    const filePath = join(STORAGE_PATH, filename);
-    migrate(filePath, symbol, db, onSuccess, onError);
+    const onError = (symbol, location, err) => {
+      log(`error migrating ${symbol} @ ${location}: `);
+      log(err);
+    };
+
+    filenames.forEach((filename) => {
+      const symbol = filename.replace('.csv', '').replace('_', '');
+      const filePath = join(STORAGE_PATH, filename);
+      migrate(filePath, symbol, db, onSuccess, onError);
+    });
   });
-
-  return promise;
 };
 
 module.exports = { runMigration };

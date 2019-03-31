@@ -74,6 +74,6 @@ const run = async () => {
   setInterval(checkLatest, MS_PER_HOUR / 2);
 };
 
-runMigration.then(() => {
+runMigration().then(() => {
   run();
 });
