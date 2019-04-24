@@ -12,7 +12,7 @@ const {
 const { join } = require('path');
 const csv = require('csv-parser');
 const { msToDatetime } = require('@solstice.sebastian/helpers');
-const { normalizeRecord } = require('./modules/normalize-record');
+const { normalizeRecord } = require('../modules/normalize-record');
 
 const { MONGO_URL, DB_NAME, STORAGE_PATH } = process.env;
 

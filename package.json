@@ -23,6 +23,7 @@
     "dotenv": "^5.0.1",
     "forever": "^0.15.3",
     "lodash": "^4.17.11",
+    "minimist": "^1.2.0",
     "mongodb": "^3.2.2",
     "node-fetch": "^1.7.3",
     "tunnel-ssh": "^4.1.4"
