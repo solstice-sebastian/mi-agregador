@@ -14,7 +14,7 @@ const {
   SSH_HOST,
 } = process.env;
 
-const isTunneling = Object.keys(argv).includes('tunnel');
+const isTunneling = argv.tunnel;
 
 const getDb = async () => {
   const mongoUrl = isTunneling ? PRODUCTION_MONGO_URL : MONGO_URL;
@@ -30,7 +30,7 @@ const run = async () => {
 
   const collections = await db.listCollections().toArray();
 
-  const dropInvalid = async (index) => {
+  const deleteInvalid = async (index) => {
     if (index === collections.length) {
       process.exit(1);
     }
@@ -53,11 +53,14 @@ const run = async () => {
       console.log(`error indexing ${symbol} with err: `, err);
       throw err;
     }
-    dropInvalid(index + 1);
+    setTimeout(() => {
+      deleteInvalid(index + 1);
+    }, 5000);
   };
-  dropInvalid(0);
+  deleteInvalid(0);
 };
 if (isTunneling) {
+  console.log('tunneling into production...');
   tunnel({
     username: SSH_USERNAME,
     privateKey: readFileSync(SSH_KEY_PATH, 'utf8'),
@@ -69,4 +72,4 @@ if (isTunneling) {
   run();
 }
 
-module.exports = { dropInvalid: run };
+module.exports = { deleteInvalid: run };

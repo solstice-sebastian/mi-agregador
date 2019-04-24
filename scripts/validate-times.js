@@ -58,7 +58,7 @@ const run = async () => {
       if (removeInvalid) {
         dropInvalid(invalidSymbols);
       } else {
-        process.exit(1);
+        return process.exit(1);
       }
     }
 
@@ -92,6 +92,7 @@ const run = async () => {
 };
 
 if (isTunneling) {
+  console.log('tunneling into production...');
   tunnel({
     username: SSH_USERNAME,
     privateKey: readFileSync(SSH_KEY_PATH, 'utf8'),
