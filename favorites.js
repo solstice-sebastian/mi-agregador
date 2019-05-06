@@ -6,7 +6,8 @@ const { msToDatetime } = require('@solstice.sebastian/helpers');
 const { TickerFetcher } = require('@solstice.sebastian/ticker-fetcher');
 const { MS_PER_HOUR, Environment } = require('@solstice.sebastian/constants');
 const { normalizeRecord } = require('./modules/normalize-record');
-const { runMigration } = require('./migrate');
+const { runMigration } = require('./scripts/migrate');
+const argv = require('minimist')(process.argv.slice(2));
 
 const apiKey = process.env.API_KEY;
 const apiSecret = process.env.API_SECRET;
@@ -65,6 +66,8 @@ const run = async () => {
   setInterval(checkLatest, MS_PER_HOUR / 2);
 };
 
-runMigration().then(() => {
+if (argv.migrate) {
+  runMigration().then(() => run());
+} else {
   run();
-});
+}
