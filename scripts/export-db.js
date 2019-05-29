@@ -47,10 +47,17 @@ const exportJson = async (collName, db) => {
 
 const run = async () => {
   const db = await getDb();
-  const collList = await db.listCollections().toArray();
-  const collNames = collList.map((c) => c.name);
+  let collNames;
+  if (argv.collections) {
+    collNames = argv.collection.split(',');
+  } else if (argv.collection) {
+    collNames = [argv.collection];
+  } else {
+    const collList = await db.listCollections().toArray();
+    collNames = collList.map((c) => c.name);
+  }
   const errored = [];
-  console.log(`exporting ${collList.length} collections from ${DB_NAME}`);
+  console.log(`exporting ${collNames.length} collections from ${DB_NAME}`);
   for (const collName of collNames) {
     try {
       await exportJson(collName, db);
@@ -59,7 +66,7 @@ const run = async () => {
       console.log(`error exporting ${collName}... :(`);
     }
   }
-  console.log(`successfully exported ${collList.length - errored.length} collections`);
+  console.log(`successfully exported ${collNames.length - errored.length} collections`);
   console.log(`errored collections => [${errored.join(', ')}]`);
   process.exit(1);
 };
