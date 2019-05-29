@@ -3,7 +3,7 @@ const { writeFileSync } = require('fs');
 const dotenv = require('dotenv');
 const { resolve } = require('path');
 
-dotenv.config();
+dotenv.config({});
 
 const { MONGO_URL } = process.env;
 const collName = 'all_results';
