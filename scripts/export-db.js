@@ -4,6 +4,7 @@ const { writeFileSync, readFileSync } = require('fs');
 const MongoClient = require('mongodb');
 const { tunnel } = require('../modules/tunnel');
 const { resolve } = require('path');
+const { msToHumanTime } = require('@solstice.sebastian/helpers');
 
 const {
   MONGO_URL,
@@ -27,16 +28,21 @@ const getDb = async () => {
 };
 
 const exportJson = async (collName, db) => {
+  const startTime = Date.now();
   console.log(`${collName}: fetching data...`);
   const data = await db
     .collection(collName)
-    .find({ localTimestamp: { $gt: 1553985900517 } })
+    .find({ localTimestamp: { $gt: 1555513350991 } })
     .sort({ localTimestamp: 1 })
     .toArray();
 
+  const fetchTime = msToHumanTime(Date.now() - startTime);
+  console.log(`${collName}: fetched data successfully in ${fetchTime}`);
+
   const outputFile = `${dataDir}/${collName}.json`;
   writeFileSync(outputFile, JSON.stringify(data), 'utf8');
-  console.log(`${collName}: exported ${data.length} docs successfully`);
+  const exportTime = msToHumanTime(Date.now() - startTime);
+  console.log(`${collName}: exported ${data.length} docs successfully in ${exportTime}`);
 };
 
 const run = async () => {
