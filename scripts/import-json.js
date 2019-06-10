@@ -47,7 +47,7 @@ const run = async () => {
 
   const _run = async (fileName) => {
     if (fileName === undefined) {
-      return;
+      process.exit(1);
     }
     const symbol = fileName.replace('.json', '');
     if (insertedAlready.includes(symbol) === false) {
