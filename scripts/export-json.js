@@ -7,7 +7,7 @@ dotenv.config({});
 
 const { MONGO_URL } = process.env;
 const collName = 'all_results';
-const dbName = 'cadence_simulator';
+const dbName = 'cadence_simulator_2019-05-27_17:04:59';
 const outputPath = resolve(__dirname, '..', 'data', `${collName}.json`);
 
 const getDb = async () => {
