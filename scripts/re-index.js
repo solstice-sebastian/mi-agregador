@@ -13,6 +13,8 @@ const {
   SSH_HOST,
 } = process.env;
 
+const symbols = ['POEBTC', 'STORMBTC', 'ADABNB', 'STEEMBTC'];
+
 const getDb = async () => {
   const mongoUrl = argv.tunnel ? PRODUCTION_MONGO_URL : MONGO_URL;
   const client = await MongoClient.connect(
@@ -73,20 +75,26 @@ const run = async () => {
   const collList = await db.listCollections().toArray();
   const collNames = collList.map((c) => c.name);
   for (const collName of collNames) {
-    try {
-      await dedup(collName, db);
-      console.log(`${collName}: successfully dedupped`);
-      await dropIndexes(collName, db);
-      console.log(`${collName}: successfully dropped indexes`);
-      await indexCollection(collName, db);
-      console.log(`${collName}: successfully indexed`);
-    } catch (err) {
-      errored.push(collName);
-      console.log(`${collName}: Error!`, err);
+    if (symbols.includes(collName)) {
+      try {
+        await dedup(collName, db);
+        console.log(`${collName}: successfully dedupped`);
+        await dropIndexes(collName, db);
+        console.log(`${collName}: successfully dropped indexes`);
+        await indexCollection(collName, db);
+        console.log(`${collName}: successfully indexed`);
+      } catch (err) {
+        errored.push(collName);
+        console.log(`${collName}: Error!`, err);
+      }
     }
   }
   if (errored.length) {
     console.log(`errored: [${errored.join(', ')}]`);
+    process.exit(1);
+  } else {
+    console.log('exiting process...');
+    process.exit(1);
   }
 };
 
