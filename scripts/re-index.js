@@ -15,7 +15,10 @@ const {
 
 const getDb = async () => {
   const mongoUrl = argv.tunnel ? PRODUCTION_MONGO_URL : MONGO_URL;
-  const client = await MongoClient.connect(mongoUrl, { useNewUrlParser: true });
+  const client = await MongoClient.connect(
+    mongoUrl,
+    { useNewUrlParser: true }
+  );
   return client.db(DB_NAME);
 };
 
@@ -23,8 +26,7 @@ const indexCollection = async (collName, db) => {
   console.log(`${collName}: indexing...`);
   return db
     .collection(collName)
-    .createIndex({ localTimestamp: -1 }, { unique: true })
-    .then(() => console.log(`successfully indexed ${collName}`))
+    .createIndex({ localTimestamp: -1 }, { unique: true, dropDups: true })
     .catch((err) => {
       console.log(`error indexing ${collName}`);
       console.log(err);
@@ -47,8 +49,22 @@ const dedup = (collName, db) => {
     ])
     .forEach((doc) => {
       doc.dups.shift();
-      db.events.remove({ _id: { $in: doc.dups } });
+      db.collection(collName).deleteMany({ _id: { $in: doc.dups } });
     });
+};
+
+const dropIndexes = async (collName, db) => {
+  const coll = await db.collection(collName);
+  const indexes = await coll.listIndexes().toArray();
+  const indexesToDrop = indexes.filter((index) => index.name.includes('localTimestamp'));
+  if (indexesToDrop.length) {
+    for (const index of indexesToDrop) {
+      console.log(`${collName}: dropping index ${index.name}`);
+      await db.collection(collName).dropIndex(index.name);
+    }
+  } else {
+    console.log(`${collName}: no index found...`);
+  }
 };
 
 const run = async () => {
@@ -58,9 +74,9 @@ const run = async () => {
   const collNames = collList.map((c) => c.name);
   for (const collName of collNames) {
     try {
-      // await dedup(collName, db);
-      // console.log(`${collName}: successfully dedupped`);
-      await db.collection(collName).dropIndexes();
+      await dedup(collName, db);
+      console.log(`${collName}: successfully dedupped`);
+      await dropIndexes(collName, db);
       console.log(`${collName}: successfully dropped indexes`);
       await indexCollection(collName, db);
       console.log(`${collName}: successfully indexed`);
