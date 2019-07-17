@@ -13,33 +13,11 @@ const { MONGO_URL } = process.env;
 const dbName = 'mi_agregador';
 
 const getDb = async () => {
-  const client = await MongoClient.connect(
-    MONGO_URL,
-    { useNewUrlParser: true }
-  );
+  const client = await MongoClient.connect(MONGO_URL, { useNewUrlParser: true });
   return client.db(dbName);
 };
 
-const insertedAlready = [
-  'ADABNB',
-  'ADABTC',
-  'ADXBTC',
-  'AEBTC',
-  'AIONBTC',
-  'AMBBNB',
-  'AMBBTC',
-  'APPCBNB',
-  'APPCBTC',
-  'ARDRBTC',
-  'ARKBTC',
-  'ARNBTC',
-  'ASTBTC',
-  'BATBNB',
-  'BATBTC',
-  'BCCBTC',
-  'BCDBTC',
-  'BCHABCBTC',
-];
+const insertedAlready = [];
 
 const run = async () => {
   const db = await getDb();
@@ -56,7 +34,7 @@ const run = async () => {
       const jsonData = JSON.parse(inputJson);
       try {
         if (jsonData.length && jsonData.length > 0) {
-          await coll.insertMany(jsonData.map(normalizeRecord));
+          await coll.insertMany(jsonData.map(normalizeRecord), { ordered: false });
           console.log(`${symbol}: successfully inserted ${jsonData.length} tickers`);
         }
       } catch (err) {

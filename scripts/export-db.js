@@ -17,12 +17,11 @@ const {
 
 const dataDir = resolve(__dirname, '..', 'data');
 
+const MOST_RECENT_TICKER_TIMESTAMP = 1559156650473; // 2019-05-29
+
 const getDb = async () => {
   const mongoUrl = argv.tunnel ? PRODUCTION_MONGO_URL : MONGO_URL;
-  const client = await MongoClient.connect(
-    mongoUrl,
-    { useNewUrlParser: true }
-  );
+  const client = await MongoClient.connect(mongoUrl, { useNewUrlParser: true });
   console.log(`successfully connected to ${mongoUrl}`);
   return client.db(DB_NAME);
 };
@@ -32,7 +31,7 @@ const exportJson = async (collName, db) => {
   console.log(`${collName}: fetching data...`);
   const data = await db
     .collection(collName)
-    .find({ localTimestamp: { $gt: 1555513350991 } })
+    .find({ localTimestamp: { $gt: MOST_RECENT_TICKER_TIMESTAMP } })
     .sort({ localTimestamp: 1 })
     .toArray();
 

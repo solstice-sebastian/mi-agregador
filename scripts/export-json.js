@@ -11,10 +11,7 @@ const dbName = 'cadence_simulator_2019-05-27_17:04:59';
 const outputPath = resolve(__dirname, '..', 'data', `${collName}.json`);
 
 const getDb = async () => {
-  const client = await MongoClient.connect(
-    MONGO_URL,
-    { useNewUrlParser: true }
-  );
+  const client = await MongoClient.connect(MONGO_URL, { useNewUrlParser: true });
   return client.db(dbName);
 };
 
