@@ -5,7 +5,13 @@ const { readFileSync, createWriteStream } = require('fs');
 const MongoClient = require('mongodb');
 const { tunnel } = require('../modules/tunnel');
 const { resolve, join } = require('path');
-const { msToHumanTime, datetime } = require('@solstice.sebastian/helpers');
+const { msToHumanTime } = require('@solstice.sebastian/helpers');
+
+/**
+ * TODO:
+ * also log a JSON blob of { [symbol]: mostRecentTimestamp }
+ * so that another script can go through and delete them later
+ */
 
 const {
   MONGO_URL,
@@ -18,7 +24,8 @@ const {
 
 const LOCAL_URL = `${MONGO_URL}/mi_agregador`;
 
-const dataDir = resolve(__dirname, '..', 'data', 'dumps');
+// const dataDir = resolve(__dirname, '..', 'data', 'dumps');
+const dataDir = '/Users/aric/Desktop/mongodumps';
 
 const getConnectionUrl = () => {
   return argv.tunnel ? PRODUCTION_MONGO_URL : LOCAL_URL;
@@ -26,10 +33,7 @@ const getConnectionUrl = () => {
 
 const getDb = async () => {
   const mongoUrl = getConnectionUrl();
-  const client = await MongoClient.connect(
-    mongoUrl,
-    { useNewUrlParser: true }
-  );
+  const client = await MongoClient.connect(mongoUrl, { useNewUrlParser: true });
   console.log(`successfully connected to ${mongoUrl}`);
   return client.db(DB_NAME);
 };

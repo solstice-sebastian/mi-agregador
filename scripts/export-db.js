@@ -15,9 +15,10 @@ const {
   SSH_HOST,
 } = process.env;
 
-const dataDir = resolve(__dirname, '..', 'data');
+const dataDir = resolve(__dirname, '..', 'data', '2019-07-17_2019-11-02');
 
-const MOST_RECENT_TICKER_TIMESTAMP = 1559156650473; // 2019-05-29
+
+const MOST_RECENT_TICKER_TIMESTAMP = 1563379740976; // 2019-07-17
 
 const getDb = async () => {
   const mongoUrl = argv.tunnel ? PRODUCTION_MONGO_URL : MONGO_URL;
