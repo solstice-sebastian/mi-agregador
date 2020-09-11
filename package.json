@@ -26,7 +26,7 @@
     "lodash": "^4.17.11",
     "minimist": "^1.2.0",
     "mongodb": "^3.2.2",
-    "node-fetch": "^1.7.3",
+    "node-fetch": "^2.6.1",
     "tunnel-ssh": "^4.1.4"
   },
   "devDependencies": {
